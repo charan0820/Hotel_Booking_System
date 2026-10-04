@@ -123,4 +123,3 @@ deployment prep.
 ## License
 
 For educational / project use.
-"# Hotel_Booking_System" 

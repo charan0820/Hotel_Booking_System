@@ -1,26 +1,32 @@
 import React, { createContext, useContext, useState } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
-/**
- * Holds the logged-in user and auth token in memory.
- * TODO: connect to POST /api/auth/login, /register, and GET /api/auth/me
- * once authController is implemented, and persist the token (e.g. via a
- * cookie set by the backend, or another storage approach that fits your
- * security requirements).
- */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
 
-  const login = (userData, authToken) => {
+  const applySession = (userData, authToken) => {
     setUser(userData);
     setToken(authToken);
+    localStorage.setItem('token', authToken);
+  };
+
+  const register = async (name, email, password) => {
+    const { data } = await api.post('/auth/register', { name, email, password });
+    applySession(data.user, data.token);
+  };
+
+  const login = async (email, password) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    applySession(data.user, data.token);
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
+    localStorage.removeItem('token');
   };
 
   const value = {
@@ -28,6 +34,7 @@ export function AuthProvider({ children }) {
     token,
     isAuthenticated: Boolean(token),
     isAdmin: user?.role === 'admin',
+    register,
     login,
     logout,
   };
